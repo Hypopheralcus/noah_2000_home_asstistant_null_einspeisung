@@ -1,0 +1,37 @@
+# Input Helper Konfiguration (in configuration.yaml einfügen)
+input_boolean:
+  tagmodus:
+    name: "NOAH Tagmodus aktiv"
+    icon: mdi:weather-sunny
+  
+  nachtmodus:
+    name: "NOAH Nachtmodus aktiv" 
+    icon: mdi:weather-night
+
+input_number:
+  noah_anpassungsfaktor:
+    name: "NOAH Anpassungsfaktor"
+    min: 1.0
+    max: 2.0
+    step: 0.1
+    initial: 1.2
+    unit_of_measurement: "x"
+    icon: mdi:tune
+
+  wechselrichter_anpassungsfaktor:
+    name: "Wechselrichter Anpassungsfaktor"
+    min: 0.8
+    max: 1.5
+    step: 0.1
+    initial: 1.0
+    unit_of_measurement: "x"
+    icon: mdi:tune
+
+  min_batteriestand:
+    name: "Minimaler Batteriestand"
+    min: 10
+    max: 50
+    step: 5
+    initial: 20
+    unit_of_measurement: "%"
+    icon: mdi:battery-low

@@ -1,0 +1,104 @@
+- sensor:
+    - name: "NOAH Ideale Wechselrichter Leistung"
+      unique_id: noah_ideale_wechselrichter_leistung
+      state: >
+        {% set reale_solar_leistung = states('sensor.noah_2000_solar_power') | float(0) %}
+        {% set max_leistung = 200 if reale_solar_leistung == 0 else 800 %}
+        {% set verbrauch_nach_einspeisung = states('sensor.tasmota_mt175_p') | float(0) %}
+        {% set solar_gesamt = states('sensor.solar_gesamtleistung') | float(0) %}
+        {% set faktor = states('input_number.wechselrichter_anpassungsfaktor') | float(1.0) %}
+        {% set gesamt_verbrauch = verbrauch_nach_einspeisung + solar_gesamt %}
+        {% set berechnet = gesamt_verbrauch * faktor %}
+        {{ [ berechnet, max_leistung ] | min | round(0) }}
+      unit_of_measurement: "W"
+      icon: mdi:transmission-tower
+
+    - name: "NOAH Ideale Ausgangsleistung"
+      unique_id: noah_ideale_ausgangsleistung
+      state: >
+        {% set reale_solar_leistung = states('sensor.noah_2000_solar_power') | float(0) %}
+        {% set max_leistung = 200 if reale_solar_leistung == 0 else 800 %}
+        {% set verbrauch_nach_einspeisung = states('sensor.tasmota_mt175_p') | float(0) %}
+        {% set solar_gesamt = states('sensor.solar_gesamtleistung') | float(0) %}
+        {% set faktor = states('input_number.noah_anpassungsfaktor') | float(1.2) %}
+        {% set gesamt_verbrauch = verbrauch_nach_einspeisung + solar_gesamt %}
+        {% set berechnet = gesamt_verbrauch * faktor %}
+        {{ [ berechnet, max_leistung ] | min | round(0) }}
+      unit_of_measurement: "W"
+      icon: mdi:battery-charging
+
+    - name: "NOAH Solarüberschuss"
+      unique_id: noah_solarueberschuss
+      state: >
+        {% set verbrauch = states('sensor.tasmota_mt175_p') | float(0) %}
+        {% set solar = states('sensor.noah_2000_solar_power') | float(0) %}
+        {{ (solar - verbrauch) | round(0) }}
+      unit_of_measurement: "W"
+      icon: mdi:solar-power
+
+    - name: "NOAH Tagmodus Maximale Solarleistung"
+      unique_id: noah_tagmodus_max_solar
+      state: >
+        {% set ziel = states('sensor.noah_ideale_wechselrichter_leistung') | float(0) %}
+        {% set max_leistung = state_attr('number.solar_maximale_leistung', 'max') | float(800) %}
+        {% if ziel > max_leistung %}
+          {{ max_leistung }}
+        {% elif ziel < 50 %}
+          0
+        {% else %}
+          {{ ziel }}
+        {% endif %}
+      unit_of_measurement: "W"
+      icon: mdi:solar-power
+
+    - name: "NOAH Tagmodus Maximale Ausgangsleistung"
+      unique_id: noah_tagmodus_max_output
+      state: >
+        {% set batterie = states('sensor.noah_2000_soc') | float(100) %}
+        {% set min_stand = states('input_number.min_batteriestand') | float(20) %}
+        {% if batterie > min_stand %}
+          {% set ziel = states('sensor.noah_ideale_ausgangsleistung') | float(0) %}
+          {% set max_leistung = state_attr('number.noah_2000_system_output_power', 'max') | float(800) %}
+          {% if ziel > max_leistung %}
+            {{ max_leistung }}
+          {% elif ziel < 50 %}
+            0
+          {% else %}
+            {{ ziel }}
+          {% endif %}
+        {% else %}
+          0
+        {% endif %}
+      unit_of_measurement: "W"
+      icon: mdi:battery-charging
+
+    - name: "NOAH Nachtmodus Grundlast"
+      unique_id: noah_nachtmodus_grundlast
+      state: >
+        {% set verbrauch = states('sensor.tasmota_mt175_p') | float(0) %}
+        {% set grundlast = verbrauch * 0.8 %}
+        {% if grundlast > 200 %}
+          {{ grundlast | round(0) }}
+        {% else %}
+          200
+        {% endif %}
+      unit_of_measurement: "W"
+      icon: mdi:power-socket-de
+
+    - name: "NOAH Nachtmodus Ausgangsleistung"
+      unique_id: noah_nachtmodus_ausgang
+      state: >
+        {% set batterie = states('sensor.noah_2000_soc') | float(100) %}
+        {% if batterie > 40 %}
+          {% set verbrauch = states('sensor.tasmota_mt175_p') | float(0) %}
+          {% set nacht_leistung = verbrauch * 0.6 %}
+          {% if nacht_leistung > 100 %}
+            {{ nacht_leistung | round(0) }}
+          {% else %}
+            100
+          {% endif %}
+        {% else %}
+          0
+        {% endif %}
+      unit_of_measurement: "W"
+      icon: mdi:weather-night

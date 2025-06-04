@@ -1,0 +1,31 @@
+- id: 'noah_statusueberwachung'
+  alias: NOAH 2000 - Status Überwachung (mit neuen Sensoren & Tag/Nacht)
+  description: Übersicht und Logging der NOAH Performance – nutzt neue Sensors und Tag-/Nachtmodus
+  trigger:
+    - platform: time_pattern
+      minutes: "/15"
+  condition: []
+  action:
+    - service: system_log.write
+      data:
+        level: info
+        message: |
+          NOAH Status:
+          Modus: {% if is_state('input_boolean.tagmodus', 'on') %}Tag{% elif is_state('input_boolean.nachtmodus', 'on') %}Nacht{% else %}Unbekannt{% endif %}
+          Batterie: {{ states('sensor.noah_2000_soc') }}%
+          Solarleistung: {{ states('sensor.noah_2000_solar_power') }}W
+          Verbrauch: {{ states('sensor.tasmota_mt175_p') }}W
+          Solar-Überschuss: {{ states('sensor.noah_solarueberschuss') }}W
+          Max. Solarleistung: 
+            {% if is_state('input_boolean.tagmodus', 'on') %}
+              {{ states('sensor.noah_tagmodus_max_solar') }}W
+            {% else %}
+              {{ states('sensor.noah_nachtmodus_grundlast') }}W
+            {% endif %}
+          Ausgangsleistung:
+            {% if is_state('input_boolean.tagmodus', 'on') %}
+              {{ states('sensor.noah_tagmodus_max_output') }}W
+            {% else %}
+              {{ states('sensor.noah_nachtmodus_ausgang') }}W
+            {% endif %}
+  mode: single

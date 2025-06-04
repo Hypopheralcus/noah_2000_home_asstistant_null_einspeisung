@@ -1,0 +1,56 @@
+- id: 'noah_tag_nacht_modus_schalter'
+  alias: NOAH 2000 - Tag/Nacht Modus automatisch setzen
+  description: Schaltet den Tag- und Nachtmodus anhand von Sonnenaufgang/-untergang und Offset
+  trigger:
+    - platform: sun
+      event: sunrise
+      offset: "-00:30:00"
+      id: sonnenaufgang
+    - platform: sun
+      event: sunset
+      offset: "00:30:00"
+      id: sonnenuntergang
+    - platform: time_pattern
+      seconds: "/30"
+      id: zyklus
+  condition: []
+  action:
+    - choose:
+        - conditions:
+            - condition: sun
+              after: sunrise
+              after_offset: "-00:30:00"
+            - condition: sun
+              before: sunset
+              before_offset: "00:30:00"
+          sequence:
+            - service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.tagmodus
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.nachtmodus
+        - conditions:
+            - condition: or
+              conditions:
+                - condition: sun
+                  before: sunrise
+                  before_offset: "-00:30:00"
+                - condition: sun
+                  after: sunset
+                  after_offset: "00:30:00"
+          sequence:
+            - service: input_boolean.turn_off
+              target:
+                entity_id: input_boolean.tagmodus
+            - service: input_boolean.turn_on
+              target:
+                entity_id: input_boolean.nachtmodus
+    # Optional: Logging
+    - service: system_log.write
+      data:
+        message: >
+          Tagmodus: {{ is_state('input_boolean.tagmodus', 'on') }},
+          Nachtmodus: {{ is_state('input_boolean.nachtmodus', 'on') }}
+        level: info
+  mode: single

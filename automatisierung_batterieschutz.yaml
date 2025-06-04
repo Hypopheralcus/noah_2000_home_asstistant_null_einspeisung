@@ -1,0 +1,66 @@
+- id: 'noah_batterieschutz'
+  alias: NOAH 2000 - Batterieschutz (mit neuen Sensoren & Tag/Nacht)
+  description: Schutz vor Tiefentladung und Überlastung – nutzt Tag-/Nachtmodus & neue Sensors
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.noah_2000_soc
+      below: 15
+      id: batterie_kritisch
+    - platform: numeric_state
+      entity_id: sensor.noah_2000_soc
+      above: 95
+      id: batterie_voll
+  condition: []
+  action:
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: batterie_kritisch
+          sequence:
+            # Batterie ist kritisch niedrig
+            - service: number.set_value
+              target:
+                entity_id: number.noah_2000_system_output_power
+              data:
+                value: 0
+            - service: number.set_value
+              target:
+                entity_id: number.noah_2000_discharge_limit
+              data:
+                value: 50
+            - service: persistent_notification.create
+              data:
+                title: "⚠️ NOAH 2000 Batterie Warnung"
+                message: "Batteriestand kritisch niedrig ({{ states('sensor.noah_2000_soc') }}%). Entladung gestoppt zum Batterieschutz."
+        - conditions:
+            - condition: trigger
+              id: batterie_voll
+          sequence:
+            # Batterie voll – Info anzeigen
+            - service: persistent_notification.create
+              data:
+                title: "🔋 NOAH 2000 Batterie Info"
+                message: "Batterie fast vollständig geladen ({{ states('sensor.noah_2000_soc') }}%). Optimaler Zeitpunkt für höheren Energieverbrauch."
+    # Optional: Reagiere im Tag- oder Nachtmodus (z.B. Leistung anpassen)
+    - choose:
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.tagmodus
+              state: "on"
+          sequence:
+            - service: number.set_value
+              target:
+                entity_id: number.noah_2000_system_output_power
+              data:
+                value: "{{ states('sensor.noah_tagmodus_max_output') | float(0) }}"
+        - conditions:
+            - condition: state
+              entity_id: input_boolean.nachtmodus
+              state: "on"
+          sequence:
+            - service: number.set_value
+              target:
+                entity_id: number.noah_2000_system_output_power
+              data:
+                value: "{{ states('sensor.noah_nachtmodus_ausgang') | float(0) }}"
+  mode: single
