@@ -40,11 +40,6 @@
                 entity_id: number.solar_maximale_leistung
               data:
                 value: "{{ states('sensor.noah_tagmodus_max_solar') | float(0) }}"
-            - service: number.set_value
-              target:
-                entity_id: number.noah_2000_system_output_power
-              data:
-                value: "{{ states('sensor.noah_tagmodus_max_output') | float(0) }}"
         - conditions:
             - condition: state
               entity_id: input_boolean.nachtmodus
@@ -60,9 +55,4 @@
                 entity_id: number.solar_maximale_leistung
               data:
                 value: "{{ states('sensor.noah_nachtmodus_grundlast') | float(0) }}"
-            - service: number.set_value
-              target:
-                entity_id: number.noah_2000_system_output_power
-              data:
-                value: "{{ states('sensor.noah_nachtmodus_ausgang') | float(0) }}"
   mode: single
