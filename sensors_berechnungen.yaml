@@ -1,4 +1,18 @@
 - sensor:
+    - name: "NOAH 2000 Discharge Power Limited"
+      unique_id: noah_2000_discharge_power_limited
+      state: >
+        {% set discharge = states('sensor.noah_2000_discharge_power') | float(0) %}
+        {% if is_state('input_boolean.tagmodus', 'on') %}
+          {{ [discharge, 600] | min }}
+        {% elif is_state('input_boolean.nachtmodus', 'on') %}
+          {{ [discharge, 150] | min }}
+        {% else %}
+          {{ discharge }}
+        {% endif %}
+      unit_of_measurement: "W"
+      icon: mdi:battery-arrow-down
+    
     - name: "NOAH Ideale Wechselrichter Leistung"
       unique_id: noah_ideale_wechselrichter_leistung
       state: >
